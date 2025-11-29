@@ -1,0 +1,30 @@
+# Xcode
+build/
+DerivedData/
+*.xcworkspace
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# CocoaPods
+Pods/
+
+# App
+*.ipa
+*.dSYM
+
+# System
+.DS_Store
+
+# Database (archivos temporales de SQLite)
+*.db-journal
+*.db-wal
+*.db-shm
+*.backup
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
