@@ -8,6 +8,9 @@
 #import <UIKit/UIKit.h>
 
 @interface ViewController : UIViewController
+@property (weak, nonatomic) IBOutlet UILabel *HuellaCarbonoScore;
+@property (weak, nonatomic) IBOutlet UILabel *RachaCount;
+@property (weak, nonatomic) IBOutlet UILabel *ActividadesCount;
 
 
 @end
