@@ -108,7 +108,7 @@
     // Crear y guardar actividad
     Actividad *actividad = [[Actividad alloc] init];
     actividad.tipoAct = tipoActividad;
-    actividad.cantidad = self.currentValue;
+    actividad.cantidad = co2Ahorrado;
     actividad.fecha = [NSDate date];
     
     DatabaseManager *dbManager = [DatabaseManager sharedManager];
@@ -121,6 +121,9 @@
         self.currentValue = 0;
         self.stepperControl.value = 0;
         [self updateIncreaseScore];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"ActividadAgregada" object:nil];
+        [self dismissViewControllerAnimated:YES completion:nil];
     } else {
         [self showAlertWithTitle:@"Error" message:@"No se pudo guardar la actividad"];
     }

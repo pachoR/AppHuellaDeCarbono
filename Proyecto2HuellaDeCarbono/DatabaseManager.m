@@ -50,7 +50,7 @@
         "actividad_id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "fecha DATE, "
         "tipoAct TEXT, "
-        "cantidad INTEGER);";
+        "cantidad FLOAT);";
 
     char *errorMsg;
     
@@ -87,7 +87,7 @@
     sqlite3_bind_text(statement, 1, [fechaString UTF8String], -1, SQLITE_TRANSIENT);
     
     sqlite3_bind_text(statement, 2, [actividad.tipoAct UTF8String], -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(statement, 3, (int)actividad.cantidad);
+    sqlite3_bind_double(statement, 3, actividad.cantidad);
     
     BOOL success = (sqlite3_step(statement) == SQLITE_DONE);
     
@@ -173,7 +173,7 @@
     sqlite3_bind_text(statement, 1, [fechaString UTF8String], -1, SQLITE_TRANSIENT);
     
     sqlite3_bind_text(statement, 2, [actividad.tipoAct UTF8String], -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(statement, 3, (int)actividad.cantidad);
+    sqlite3_bind_double(statement, 3, actividad.cantidad);
     sqlite3_bind_int(statement, 4, (int)actividad.actividadId);
     
     BOOL success = (sqlite3_step(statement) == SQLITE_DONE);
@@ -210,7 +210,7 @@
     actividad.fecha = [formatter dateFromString:[NSString stringWithUTF8String:fechaStr]];
     
     actividad.tipoAct = [NSString stringWithUTF8String:(const char *)sqlite3_column_text(statement, 2)];
-    actividad.cantidad = sqlite3_column_int(statement, 3);
+    actividad.cantidad = sqlite3_column_double(statement, 3);
     
     return actividad;
 }
@@ -234,6 +234,53 @@
 
 - (void)dealloc {
     [self closeDatabase];
+}
+
+- (NSArray<Actividad *> *)getActividadesHoy {
+    NSMutableArray *actividades = [NSMutableArray array];
+    
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd"];
+    NSString *hoyString = [formatter stringFromDate:[NSDate date]];
+    
+    const char *sql = "SELECT * FROM actividad WHERE fecha = ? ORDER BY actividad_id DESC";
+    sqlite3_stmt *statement;
+    
+    if (sqlite3_prepare_v2(_database, sql, -1, &statement, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(statement, 1, [hoyString UTF8String], -1, SQLITE_TRANSIENT);
+        
+        while (sqlite3_step(statement) == SQLITE_ROW) {
+            Actividad *actividad = [self actividadFromStatement:statement];
+            [actividades addObject:actividad];
+        }
+    }
+    
+    sqlite3_finalize(statement);
+    return actividades;
+}
+
+#pragma mark - Racha
+- (NSInteger)getRachaCount {
+    NSInteger racha = 0;
+    NSDate *fechaActual = [NSDate date];
+    NSDateComponents *componentes = [[NSDateComponents alloc] init];
+    NSCalendar *calendario = [NSCalendar currentCalendar];
+    
+    // Verificar días consecutivos hacia atrás
+    for (NSInteger diasAtras = 0; diasAtras < 365; diasAtras++) { // Límite de 1 año
+        [componentes setDay:-diasAtras];
+        NSDate *fechaVerificar = [calendario dateByAddingComponents:componentes toDate:fechaActual options:0];
+        
+        NSArray<Actividad *> *actividadesDelDia = [self getActividadesByFecha:fechaVerificar];
+        
+        if (actividadesDelDia.count > 0) {
+            racha++;
+        } else {
+            break;
+        }
+    }
+    
+    return racha;
 }
 
 @end

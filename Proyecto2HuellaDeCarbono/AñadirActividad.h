@@ -13,5 +13,4 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)SegmentTipoActividadChanged:(id)sender;
 
 @end
-
 NS_ASSUME_NONNULL_END

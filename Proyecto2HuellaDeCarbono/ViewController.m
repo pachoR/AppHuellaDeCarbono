@@ -21,34 +21,37 @@
     [self.dbManager initializeDatabase];
     // Do any additional setup after loading the view.
     [self loadDashboardData];
+    [self loadNotifications];
 }
 
 - (void) loadDashboardData {
-    NSLog(@"loadDashboardData");
-    printf("loadDashbaordData\n");
+    NSArray<Actividad *> *actividades = [self.dbManager getAllActividades];
+    self.ActividadesCount.text = [NSString stringWithFormat:@"%lu", (unsigned long)actividades.count];
+    
+    float huellaKgCO2 = 0.0;
+    for (Actividad *actividad in actividades) {
+        printf("cantidad: %2.f\n", actividad.cantidad);
+        huellaKgCO2 += actividad.cantidad;
+    }
+    
+    self.HuellaCarbonoScore.text = [NSString stringWithFormat:@"%.2f", huellaKgCO2];
+    
+    NSInteger racha = [self.dbManager getRachaCount];
+    self.RachaCount.text = [NSString stringWithFormat:@"%d", (int)racha];
 }
 
+# pragma mark - Notificaciones
 
-#pragma mark - Helper Methods
-- (NSDate *)getStartOfCurrentMonth {
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    NSDateComponents *components = [calendar components:NSCalendarUnitYear | NSCalendarUnitMonth fromDate:[NSDate date]];
-    return [calendar dateFromComponents:components];
+- (void) loadNotifications {
+    [[NSNotificationCenter defaultCenter]
+         addObserver:self
+            selector:@selector(handleActividadAgregada)
+                name:@"ActividadAgregada"
+              object:nil];
 }
 
-- (void)updateDashboardUI:(float)co2 racha:(NSInteger)racha actividades:(NSInteger)actividades {
-    // Actualizar Huella de Carbono (CO2 ahorrado hoy)
-    self.HuellaCarbonoScore.text = [NSString stringWithFormat:@"%.1f kg", co2];
-    
-    // Actualizar Racha
-    self.RachaCount.text = [NSString stringWithFormat:@"%ld", (long)racha];
-    
-    // Actualizar Actividades
-    self.ActividadesCount.text = [NSString stringWithFormat:@"%ld", (long)actividades];
-    
-    // Log para debug
-    NSLog(@"Dashboard actualizado - CO2: %.1f kg, Racha: %ld días, Actividades: %ld",
-          co2, (long)racha, (long)actividades);
+- (void) handleActividadAgregada {
+    [self loadDashboardData];
 }
 
 @end
