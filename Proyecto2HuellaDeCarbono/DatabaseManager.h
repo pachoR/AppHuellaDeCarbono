@@ -4,17 +4,17 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface Actividad : NSObject
-@property (nonatomic, assign) NSInteger actividadId;
-@property (nonatomic, strong) NSDate *fecha;
-@property (nonatomic, strong) NSString *tipoAct;
-@property (nonatomic, assign) CGFloat cantidad;
+@property(nonatomic, assign) NSInteger actividadId;
+@property(nonatomic, strong) NSDate *fecha;
+@property(nonatomic, strong) NSString *tipoAct;
+@property(nonatomic, assign) CGFloat cantidad;
 @end
 
 @interface Desafio : NSObject
-@property (nonatomic, assign) NSInteger desafioId;
-@property (nonatomic, strong) NSString *desafioUno;
-@property (nonatomic, strong) NSString *desafioDos;
-@property (nonatomic, strong) NSDate *fechaCreacion;
+@property(nonatomic, assign) NSInteger desafioId;
+@property(nonatomic, strong) NSString *desafioUno;
+@property(nonatomic, strong) NSString *desafioDos;
+@property(nonatomic, strong) NSDate *fechaCreacion;
 @end
 
 @interface DatabaseManager : NSObject
@@ -47,8 +47,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSInteger)getRachaCount;
 
 // Agrega estos métodos al final del interface
-- (NSDictionary *)getDatosSemanalesCO2;
-- (NSDictionary *)getDatosMensualesCO2;
+// Devuelven arreglos ordenados de diccionarios: @{ @"label": NSString, @"value": NSNumber }
+- (NSArray<NSDictionary *> *)getDatosSemanalesCO2;
+- (NSArray<NSDictionary *> *)getDatosMensualesCO2;
 @end
 
 NS_ASSUME_NONNULL_END

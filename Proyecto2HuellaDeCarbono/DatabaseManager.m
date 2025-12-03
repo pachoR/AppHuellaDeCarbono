@@ -439,7 +439,8 @@
 #pragma mark - Datos para Gráficos
 
 - (NSDictionary *)getDatosSemanalesCO2 {
-    NSMutableDictionary *datosSemanales = [NSMutableDictionary dictionary];
+    // Devolver un arreglo ordenado (7 días) de diccionarios con clave "label" y "value"
+    NSMutableArray *datosSemanales = [NSMutableArray array];
     
     NSCalendar *calendario = [NSCalendar currentCalendar];
     NSDate *hoy = [NSDate date];
@@ -448,17 +449,16 @@
     [displayFormatter setDateFormat:@"EEE dd"];
     [displayFormatter setLocale:[NSLocale localeWithLocaleIdentifier:@"es_ES"]];
     
-    // Obtener las fechas de la semana (SOLO 7 DÍAS ATRÁS)
-    NSMutableArray *fechasSemana = [NSMutableArray array];
+    // Obtener las fechas de la semana (SOLO 7 DÍAS ATRÁS) y crear entradas iniciales en orden
+    NSMutableDictionary *indexByLabel = [NSMutableDictionary dictionary];
     for (int i = 6; i >= 0; i--) {
         NSDateComponents *componentes = [[NSDateComponents alloc] init];
         [componentes setDay:-i]; // Solo días pasados
         NSDate *fecha = [calendario dateByAddingComponents:componentes toDate:hoy options:0];
-        [fechasSemana addObject:fecha];
-        
-        // Inicializar con 0
         NSString *fechaDisplay = [displayFormatter stringFromDate:fecha];
-        datosSemanales[fechaDisplay] = @(0.0);
+        NSMutableDictionary *entry = [@{@"label": fechaDisplay, @"value": @(0.0)} mutableCopy];
+        [datosSemanales addObject:entry];
+        indexByLabel[fechaDisplay] = @(datosSemanales.count - 1);
     }
     
     // Consulta: suma total por día (cantidad real)
@@ -478,8 +478,12 @@
             NSDate *fecha = [formatter dateFromString:fechaDB];
             NSString *fechaDisplay = [displayFormatter stringFromDate:fecha];
             
-            // Actualizar el valor para este día
-            datosSemanales[fechaDisplay] = @(totalCantidad);
+            // Actualizar el valor para este día (si existe en el rango inicial)
+            NSNumber *idx = indexByLabel[fechaDisplay];
+            if (idx) {
+                NSMutableDictionary *entry = datosSemanales[[idx intValue]];
+                entry[@"value"] = @(totalCantidad);
+            }
         }
     }
     
@@ -488,7 +492,8 @@
 }
 
 - (NSDictionary *)getDatosMensualesCO2 {
-    NSMutableDictionary *datosMensuales = [NSMutableDictionary dictionary];
+    // Devolver un arreglo ordenado (últimos 6 meses) de diccionarios con clave "label" y "value"
+    NSMutableArray *datosMensuales = [NSMutableArray array];
     
     NSCalendar *calendario = [NSCalendar currentCalendar];
     NSDate *hoy = [NSDate date];
@@ -505,50 +510,52 @@
         NSDateComponents *componentes = [[NSDateComponents alloc] init];
         [componentes setMonth:-i];
         NSDate *fechaMes = [calendario dateByAddingComponents:componentes toDate:hoy options:0];
-        
+
         // Si la fecha resultante es en el futuro, saltar
         if ([fechaMes compare:hoy] == NSOrderedDescending) {
             continue;
         }
-        
+
         NSString *mesDisplay = [[displayFormatter stringFromDate:fechaMes] capitalizedString];
-        
+
         // Obtener primer y último día del mes
         NSRange rango = [calendario rangeOfUnit:NSCalendarUnitDay inUnit:NSCalendarUnitMonth forDate:fechaMes];
         NSDateComponents *compInicio = [calendario components:NSCalendarUnitYear | NSCalendarUnitMonth fromDate:fechaMes];
         compInicio.day = 1;
         NSDate *primerDia = [calendario dateFromComponents:compInicio];
-        
+
         compInicio.day = rango.length;
         NSDate *ultimoDia = [calendario dateFromComponents:compInicio];
-        
+
         // Asegurar que no incluimos días futuros
         if ([ultimoDia compare:hoy] == NSOrderedDescending) {
             ultimoDia = hoy;
         }
-        
+
         // Consulta para cantidad total del mes
         const char *sql = "SELECT SUM(cantidad) as total_cantidad FROM actividad WHERE fecha BETWEEN ? AND ?";
         sqlite3_stmt *statement;
-        
+
         float totalCantidadMes = 0.0;
-        
+
         if (sqlite3_prepare_v2(_database, sql, -1, &statement, NULL) == SQLITE_OK) {
             NSString *inicioString = [formatter stringFromDate:primerDia];
             NSString *finString = [formatter stringFromDate:ultimoDia];
-            
+
             sqlite3_bind_text(statement, 1, [inicioString UTF8String], -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(statement, 2, [finString UTF8String], -1, SQLITE_TRANSIENT);
-            
+
             if (sqlite3_step(statement) == SQLITE_ROW) {
                 totalCantidadMes = sqlite3_column_double(statement, 0);
             }
         }
-        
+
         sqlite3_finalize(statement);
-        datosMensuales[mesDisplay] = @(totalCantidadMes);
+
+        NSMutableDictionary *entry = [@{@"label": mesDisplay, @"value": @(totalCantidadMes)} mutableCopy];
+        [datosMensuales addObject:entry];
     }
-    
+
     return datosMensuales;
 }
 @end

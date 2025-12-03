@@ -3,8 +3,8 @@
 @import DGCharts;
 
 @interface Estadisticas ()
-@property (nonatomic, strong) NSDictionary *datosSemanales;
-@property (nonatomic, strong) NSDictionary *datosMensuales;
+@property (nonatomic, strong) NSArray<NSDictionary *> *datosSemanales;
+@property (nonatomic, strong) NSArray<NSDictionary *> *datosMensuales;
 @property (nonatomic, assign) BOOL mostrandoSemanales;
 // La propiedad chartView ya está declarada en el .h como strong
 @end
@@ -39,7 +39,12 @@
     xAxis.drawGridLinesEnabled = NO;
     xAxis.granularity = 1.0;
     xAxis.labelCount = 7;
-    xAxis.labelTextColor = [UIColor darkGrayColor];
+    UIColor *axisColor = [UIColor darkGrayColor];
+    if (@available(iOS 11.0, *)) {
+        UIColor *c = [UIColor colorNamed:@"ThemeAccentDark"];
+        if (c) axisColor = c;
+    }
+    xAxis.labelTextColor = axisColor;
     
     // Configurar eje Y izquierdo
     ChartYAxis *leftAxis = self.chartView.leftAxis;
@@ -47,7 +52,7 @@
     leftAxis.drawZeroLineEnabled = YES;
     leftAxis.zeroLineColor = [UIColor lightGrayColor];
     leftAxis.gridColor = [UIColor lightGrayColor];
-    leftAxis.labelTextColor = [UIColor darkGrayColor];
+    leftAxis.labelTextColor = axisColor;
     leftAxis.axisMinimum = 0.0;
     
     // Ocultar eje Y derecho
@@ -70,14 +75,20 @@
     [self actualizarChartConDatos:self.datosMensuales esSemanal:NO];
 }
 
-- (void)actualizarChartConDatos:(NSDictionary *)datos esSemanal:(BOOL)esSemanal {
-    NSArray *labels = [datos allKeys];
-    NSArray *values = [datos allValues];
-    
+ - (void)actualizarChartConDatos:(NSArray<NSDictionary *> *)datos esSemanal:(BOOL)esSemanal {
+    // 'datos' es un arreglo ordenado de diccionarios con claves "label" y "value"
+    NSArray *labels = [datos valueForKey:@"label"];
+    NSArray *values = [datos valueForKey:@"value"];
+
     NSMutableArray *dataEntries = [NSMutableArray array];
-    
+
     for (int i = 0; i < labels.count; i++) {
-        BarChartDataEntry *entry = [[BarChartDataEntry alloc] initWithX:i y:[values[i] doubleValue]];
+        double v = 0.0;
+        id val = values[i];
+        if ([val respondsToSelector:@selector(doubleValue)]) {
+            v = [val doubleValue];
+        }
+        BarChartDataEntry *entry = [[BarChartDataEntry alloc] initWithX:i y:v];
         [dataEntries addObject:entry];
     }
     

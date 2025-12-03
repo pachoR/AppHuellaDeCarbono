@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (IBAction)BotonOtros:(id)sender;
 - (IBAction)BotonGuardar:(id)sender;
 - (IBAction)BotonCompletado:(id)sender;
+@property (weak, nonatomic) IBOutlet UILabel *MisDesafiosTitle;
 
 @end
 
