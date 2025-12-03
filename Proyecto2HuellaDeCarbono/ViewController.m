@@ -30,7 +30,7 @@
 }
 
 - (void) loadDashboardData {
-    NSArray<Actividad *> *actividades = [self.dbManager getAllActividades];
+    NSArray<Actividad *> *actividades = [self.dbManager getActividadesHoy];
     self.ActividadesCount.text = [NSString stringWithFormat:@"%lu", (unsigned long)actividades.count];
     
     float huellaKgCO2 = 0.0;

@@ -469,6 +469,7 @@
         while (sqlite3_step(statement) == SQLITE_ROW) {
             const char *fechaStr = (const char *)sqlite3_column_text(statement, 0);
             float totalCantidad = sqlite3_column_double(statement, 1);
+            NSLog(@"fechaStr: %s; total: %.2f", fechaStr, totalCantidad);
             
             NSString *fechaDB = [NSString stringWithUTF8String:fechaStr];
             
@@ -541,6 +542,8 @@
         if (sqlite3_prepare_v2(_database, sql, -1, &statement, NULL) == SQLITE_OK) {
             NSString *inicioString = [formatter stringFromDate:primerDia];
             NSString *finString = [formatter stringFromDate:ultimoDia];
+            NSLog(@"Inicio string: %@", inicioString);
+            NSLog(@"Fin string: %@", finString);
 
             sqlite3_bind_text(statement, 1, [inicioString UTF8String], -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(statement, 2, [finString UTF8String], -1, SQLITE_TRANSIENT);

@@ -1,4 +1,4 @@
-#import "Estadísticas.h"
+#import "Estadísticas.h"
 #import "DatabaseManager.h"
 @import DGCharts;
 
@@ -75,8 +75,7 @@
     [self actualizarChartConDatos:self.datosMensuales esSemanal:NO];
 }
 
- - (void)actualizarChartConDatos:(NSArray<NSDictionary *> *)datos esSemanal:(BOOL)esSemanal {
-    // 'datos' es un arreglo ordenado de diccionarios con claves "label" y "value"
+- (void)actualizarChartConDatos:(NSArray<NSDictionary *> *)datos esSemanal:(BOOL)esSemanal {
     NSArray *labels = [datos valueForKey:@"label"];
     NSArray *values = [datos valueForKey:@"value"];
 
@@ -94,9 +93,13 @@
     
     BarChartDataSet *dataSet = [[BarChartDataSet alloc] initWithEntries:dataEntries label:@"kg CO2"];
     
+    // COLOR VERDE #079669
+    UIColor *barColor = [self colorFromHexString:@"#079669"];
+    
+    // Crear un array de colores (todas las barras igual)
     NSMutableArray *colors = [NSMutableArray array];
     for (int i = 0; i < dataEntries.count; i++) {
-        [colors addObject:[UIColor colorWithRed:0.2 green:0.8 blue:0.4 alpha:1.0]];
+        [colors addObject:barColor];
     }
     dataSet.colors = colors;
     
@@ -129,6 +132,31 @@
             [self cargarDatosMensuales];
         }
     }
+}
+
+- (UIColor *)colorFromHexString:(NSString *)hexString {
+    NSString *cleanString = [hexString stringByReplacingOccurrencesOfString:@"#" withString:@""];
+    
+    if([cleanString length] == 3) {
+        cleanString = [NSString stringWithFormat:@"%@%@%@%@%@%@",
+                       [cleanString substringWithRange:NSMakeRange(0, 1)],[cleanString substringWithRange:NSMakeRange(0, 1)],
+                       [cleanString substringWithRange:NSMakeRange(1, 1)],[cleanString substringWithRange:NSMakeRange(1, 1)],
+                       [cleanString substringWithRange:NSMakeRange(2, 1)],[cleanString substringWithRange:NSMakeRange(2, 1)]];
+    }
+    
+    if([cleanString length] == 6) {
+        cleanString = [cleanString stringByAppendingString:@"ff"];
+    }
+    
+    unsigned int baseValue;
+    [[NSScanner scannerWithString:cleanString] scanHexInt:&baseValue];
+    
+    float red = ((baseValue >> 24) & 0xFF)/255.0f;
+    float green = ((baseValue >> 16) & 0xFF)/255.0f;
+    float blue = ((baseValue >> 8) & 0xFF)/255.0f;
+    float alpha = ((baseValue >> 0) & 0xFF)/255.0f;
+    
+    return [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
 }
 
 @end
